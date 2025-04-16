@@ -1,0 +1,114 @@
+﻿<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>编号投票系统</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    input, select, button { padding: 8px; margin: 10px 0; width: 100%; max-width: 400px; }
+    table { border-collapse: collapse; margin-top: 20px; width: 100%; max-width: 600px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+  </style>
+</head>
+<body>
+  <h2>60人编号投票系统</h2>
+  <p>格式：序号-姓名-身份，例如：01-张三-组员</p>
+
+  <input type="text" id="voterInput" placeholder="请输入您的身份信息">
+  <button onclick="authenticate()">进入投票</button>
+
+  <div id="voteSection" style="display:none">
+    <label for="voteSelect">请选择您要投票的序号：</label>
+    <select id="voteSelect"></select>
+    <button onclick="submitVote()">提交投票</button>
+  </div>
+
+  <div id="resultSection" style="display:none">
+    <h3>投票结果：</h3>
+    <table id="resultTable">
+      <tr><th>编号</th><th>票数</th></tr>
+    </table>
+  </div>
+
+  <script>
+    // 初始化60个样本编号 01 到 60
+    const sampleCount = 60;
+    const votes = Array(sampleCount).fill(0);
+    let currentIndex = -1;
+    let currentRole = "";
+    let hasVoted = false;
+
+    function padNumber(n) {
+      return n < 10 ? '0' + n : '' + n;
+    }
+
+    function authenticate() {
+      const input = document.getElementById("voterInput").value.trim();
+      const parts = input.split("-");
+      if (parts.length !== 3) {
+        alert("输入格式不正确，请使用 '序号-姓名-身份' 格式。");
+        return;
+      }
+      const [indexStr, name, role] = parts;
+      const index = parseInt(indexStr, 10);
+
+      if (isNaN(index) || index < 1 || index > sampleCount) {
+        alert("序号无效，应为01到60之间的数字。");
+        return;
+      }
+
+      currentIndex = index - 1; // 转为0索引
+      currentRole = role.trim();
+
+      if (currentRole === "教师") {
+        showResults();
+        return;
+      }
+
+      if (currentRole !== "组员" && currentRole !== "组长") {
+        alert("身份必须是组员、组长或教师。");
+        return;
+      }
+
+      if (hasVoted) {
+        alert("您已经投过票了。");
+        return;
+      }
+
+      // 构建投票下拉列表（不能投自己）
+      const voteSelect = document.getElementById("voteSelect");
+      voteSelect.innerHTML = "";
+      for (let i = 0; i < sampleCount; i++) {
+        if (i !== currentIndex) {
+          const option = document.createElement("option");
+          option.value = i;
+          option.text = padNumber(i + 1);
+          voteSelect.appendChild(option);
+        }
+      }
+
+      document.getElementById("voteSection").style.display = "block";
+    }
+
+    function submitVote() {
+      const selectedIndex = parseInt(document.getElementById("voteSelect").value);
+      const weight = currentRole === "组长" ? 2 : 1;
+      votes[selectedIndex] += weight;
+      hasVoted = true;
+      alert(`投票成功！您为 ${padNumber(selectedIndex + 1)} 号样本投了 ${weight} 票。`);
+      document.getElementById("voteSection").style.display = "none";
+    }
+
+    function showResults() {
+      const table = document.getElementById("resultTable");
+      table.innerHTML = '<tr><th>编号</th><th>票数</th></tr>';
+      for (let i = 0; i < sampleCount; i++) {
+        const row = document.createElement("tr");
+        row.innerHTML = `<td>${padNumber(i + 1)}</td><td>${votes[i]}</td>`;
+        table.appendChild(row);
+      }
+      document.getElementById("resultSection").style.display = "block";
+    }
+  </script>
+</body>
+</html>
